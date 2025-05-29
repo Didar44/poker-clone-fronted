@@ -1,70 +1,91 @@
-# Getting Started with Create React App
+# Онлайн Покер — Клон игры с реальным временем
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Описание проекта
 
-## Available Scripts
+Это многопользовательское онлайн-приложение для игры в покер с поддержкой реального времени. Игроки могут создавать комнаты, подключаться к ним, делать ставки, играть против других игроков или бота. Игра реализована с использованием React на фронтенде и Node.js + Socket.IO на сервере.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Установка и запуск
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Сервер (Backend)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Клонировать репозиторий:
 
-### `npm test`
+```bash
+git clone https://github.com/Didar44/poker-clone-backend.git
+cd poker-clone-backend
+Установить зависимости:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+bash
+Копировать
+npm install
+Запустить сервер:
 
-### `npm run build`
+bash
+Копировать
+npm start
+Сервер будет доступен по умолчанию на http://localhost:4000.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Клиент (Frontend)
+Перейти в папку с фронтендом:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+bash
+Копировать
+cd poker-clone-frontend
+Установить зависимости:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+bash
+Копировать
+npm install
+Запустить приложение:
 
-### `npm run eject`
+bash
+Копировать
+npm start
+Откройте в браузере http://localhost:3000.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Процесс разработки
+Создан сервер на Node.js с использованием Socket.IO для поддержки WebSocket соединений и реального времени.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Фронтенд построен на React с хуками и React Router.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Использован pokersolver для определения выигрыша.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Реализован бот с простой логикой принятия решений.
 
-## Learn More
+Игроки могут подключаться к комнатам, видеть состояние игры и взаимодействовать через UI.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Уникальные подходы и методологии
+Игровая логика вынесена на сервер для консистентности.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Использован Socket.IO для простоты работы с WebSocket и масштабируемости.
 
-### Code Splitting
+Логика бота с задержкой для имитации мышления.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Поддержка переподключения и восстановления состояния игроков.
 
-### Analyzing the Bundle Size
+UI адаптивен для десктопа и мобильных устройств.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Компромиссы
+Логика бота упрощена для сокращения времени разработки.
 
-### Making a Progressive Web App
+Дизайн и анимации минимальны, чтобы сосредоточиться на функционале.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Валидация ставок и управление ошибками сделаны базовыми.
 
-### Advanced Configuration
+Известные проблемы
+Возможны проблемы при переподключении игроков в некоторых случаях.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Бот не всегда принимает оптимальные решения.
 
-### Deployment
+Нет поддержки продвинутых покерных правил (например, side pot).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Технический стек
+Backend: Node.js, Express, Socket.IO, pokersolver
 
-### `npm run build` fails to minify
+Frontend: React, React Router, Socket.IO client
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Хостинг: Render (Backend), Vercel/Netlify (Frontend)
+
+Выбор стеков обусловлен простотой разработки, широкой поддержкой WebSocket и эффективной работой с реальным временем.
