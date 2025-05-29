@@ -89,3 +89,8 @@ Frontend: React, React Router, Socket.IO client
 Хостинг: Render (Backend), Vercel/Netlify (Frontend)
 
 Выбор стеков обусловлен простотой разработки, широкой поддержкой WebSocket и эффективной работой с реальным временем.
+
+
+
+
+ВИДЕО -ДЕМО ССЫЛКА-https://youtu.be/RmLsftFeGJk?si=qpkpkodsitwCIle_
