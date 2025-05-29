@@ -5,11 +5,22 @@ const { Server } = require('socket.io');
 const { Hand } = require('pokersolver');
 const { v4: uuidv4 } = require('uuid');
 
+const FRONTEND_URL = 'https://poker-clone-fronted-9.onrender.com'; 
+
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true,
+}));
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_URL,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  }
+});
 
 const suits = ['♠️', '♥️', '♦️', '♣️'];
 const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
@@ -46,12 +57,13 @@ function addBot(room) {
     isAllIn: false,
     isBot: true,
   });
+  console.log(`Bot added to room ${room.id}`);
 }
 
 async function botAction(room, bot) {
   if (room.round === 'waiting' || bot.folded || bot.isAllIn) return;
 
-  await new Promise(r => setTimeout(r, 1500));
+  await new Promise(r => setTimeout(r, 1500)); // Delay for realism
 
   const strongRanks = ['10', 'J', 'Q', 'K', 'A'];
   const hasStrongCard = bot.cards.some(card => strongRanks.some(r => card.startsWith(r)));
@@ -60,6 +72,7 @@ async function botAction(room, bot) {
     bot.folded = true;
     bot.currentBet = 0;
     io.to(room.id).emit('chatMessage', { sender: 'Bot', message: 'Bot folds' });
+    console.log(`Bot folds in room ${room.id}`);
   } else {
     const callAmount = room.currentBet - bot.currentBet;
     if (callAmount > bot.chips) {
@@ -68,6 +81,7 @@ async function botAction(room, bot) {
       bot.chips = 0;
       bot.isAllIn = true;
       io.to(room.id).emit('chatMessage', { sender: 'Bot', message: 'Bot calls all-in' });
+      console.log(`Bot calls all-in in room ${room.id}`);
     } else {
       const raiseChance = Math.random();
       if (raiseChance < 0.5) {
@@ -75,6 +89,7 @@ async function botAction(room, bot) {
         bot.currentBet += callAmount;
         room.pot += callAmount;
         io.to(room.id).emit('chatMessage', { sender: 'Bot', message: 'Bot calls' });
+        console.log(`Bot calls in room ${room.id}`);
       } else {
         let raiseAmount = room.currentBet + 50;
         if (raiseAmount > bot.chips + bot.currentBet) raiseAmount = bot.chips + bot.currentBet;
@@ -84,6 +99,7 @@ async function botAction(room, bot) {
         room.currentBet = raiseAmount;
         room.pot += diff;
         io.to(room.id).emit('chatMessage', { sender: 'Bot', message: `Bot raises to ${raiseAmount}` });
+        console.log(`Bot raises to ${raiseAmount} in room ${room.id}`);
       }
     }
   }
@@ -107,6 +123,8 @@ function advanceTurn(room) {
       return;
     }
   }
+
+  console.log(`No active players left to take turn in room ${room.id}`);
 }
 
 io.on('connection', (socket) => {
@@ -137,7 +155,7 @@ io.on('connection', (socket) => {
     if (player) {
       player.id = socket.id;
       player.name = playerName;
-      console.log(`Player ${player.name} reconnected`);
+      console.log(`Player ${player.name} reconnected to room ${roomId}`);
     } else {
       player = {
         id: socket.id,
@@ -150,11 +168,12 @@ io.on('connection', (socket) => {
         isAllIn: false,
       };
       room.players.push(player);
-      console.log(`New player ${playerName} joined`);
+      console.log(`New player ${playerName} joined room ${roomId}`);
     }
 
     if (!room.hostPlayerId) {
       room.hostPlayerId = playerId;
+      console.log(`Host assigned: ${playerName} (${playerId}) in room ${roomId}`);
     }
 
     if (room.players.filter(p => !p.isBot).length < 2) {
@@ -166,7 +185,8 @@ io.on('connection', (socket) => {
 
   socket.on('startGame', ({ roomId }) => {
     const room = rooms[roomId];
-    if (!room || socket.id !== room.players.find(p => p.playerId === room.hostPlayerId)?.id) return;
+    const host = room?.players.find(p => p.playerId === room.hostPlayerId);
+    if (!room || socket.id !== host?.id) return;
 
     room.deck = createDeck();
     shuffle(room.deck);
@@ -275,7 +295,8 @@ io.on('connection', (socket) => {
 
   socket.on('nextStage', ({ roomId }) => {
     const room = rooms[roomId];
-    if (!room || socket.id !== room.players.find(p => p.playerId === room.hostPlayerId)?.id) return;
+    const host = room?.players.find(p => p.playerId === room.hostPlayerId);
+    if (!room || socket.id !== host?.id) return;
 
     if (room.round === 'pre-flop') {
       room.round = 'flop';
@@ -295,6 +316,15 @@ io.on('connection', (socket) => {
 
       const winners = Hand.winners(hands.map(h => h.hand));
       const winningPlayers = hands.filter(h => winners.includes(h.hand));
+
+      if (winningPlayers.length === 0) {
+        console.warn(`No winning players found in room ${room.id} during showdown`);
+        room.round = 'waiting';
+        io.to(room.id).emit('roundStage', 'waiting');
+        io.to(room.id).emit('roomData', room);
+        return;
+      }
+
       const winner = winningPlayers[0].player;
 
       io.to(room.id).emit('gameResult', {
@@ -315,7 +345,8 @@ io.on('connection', (socket) => {
 
   socket.on('resetGame', ({ roomId }) => {
     const room = rooms[roomId];
-    if (!room || socket.id !== room.players.find(p => p.playerId === room.hostPlayerId)?.id) return;
+    const host = room?.players.find(p => p.playerId === room.hostPlayerId);
+    if (!room || socket.id !== host?.id) return;
 
     room.round = 'waiting';
     room.board = [];
@@ -344,8 +375,10 @@ io.on('connection', (socket) => {
       room.players = room.players.filter(p => p.id !== socket.id);
       if (room.players.length === 0) {
         delete rooms[roomId];
+        console.log(`Deleted empty room ${roomId}`);
       } else {
         io.to(roomId).emit('roomData', room);
+        console.log(`Player disconnected, updated room data sent for room ${roomId}`);
       }
     }
   });
@@ -355,7 +388,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
